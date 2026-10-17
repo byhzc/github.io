@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>白杨河电厂人工采样随机布点</title>  
+<style>  
+*{box-sizing:border-box;font-family:system-ui;margin:0;padding:0;}  
+body{padding:8px;background:#f4f6f8;}  
+.box{background:#fff;padding:12px;border-radius:10px;max-width:420px;margin:0 auto;box-shadow:0 2px 6px #00000015;}  
+h2{text-align:center;color:#222;margin-bottom:8px;font-size:26px;}  
+.setting{margin:5px 0;display:flex;gap:8px;align-items:center;flex-wrap:nowrap;}  
+.numInput{padding:11px;font-size:21px;border:1px solid #ccc;border-radius:6px;}  
+#carNoInput{width:100%;}  
+#pointMin,#pointMax{width:110px;}  
+.wrap-row{margin:3px 0;}  
+.txt-row{  
+    font-size:19px;  
+    color:#0066cc;  
+    line-height:1.5;  
+    display: -webkit-box;  
+    -webkit-line-clamp: 2;  
+    -webkit-box-orient: vertical;  
+    overflow: hidden;  
+    word-break:break-all;  
+}  
+.txt-row.expanded{  
+    display:block;  
+    -webkit-line-clamp:unset;  
+    overflow:visible;  
+}  
+.wrap-row.all .txt-row{color:#333;}  
+.toggle-btn{  
+    font-size:16px;  
+    color:#007bff;  
+    border:none;  
+    background:transparent;  
+    padding:2px 4px;  
+    cursor:pointer;  
+    margin-left:4px;  
+}  
+.toggle-btn.hidden{display:none;}  
+.round-info{font-size:19px;color:green;text-align:center;margin:2px 0;}  
+.countdown{font-size:20px;color:#222;text-align:center;margin:2px 0;font-weight:bold;}  
+.result{font-size:32px;font-weight:bold;color:#d92121;text-align:center;margin:6px 0;line-height:1.4;}  
+.time-info{font-size:19px;color:#444;text-align:center;margin-bottom:4px;}  
+.btn-row{display:flex;gap:8px;margin:4px 0;}  
+.car-input-wrap{margin:0 0 4px 0;}  
+.btn{flex:1;padding:15px;font-size:22px;border:none;border-radius:8px;cursor:pointer;}  
+#exportBtn{background:#239b56;color:#fff;}  
+#drawBtn{background:#0066cc;color:#fff;}  
+#resetAllBtn{background:#c0392b;color:#fff;}  
+#resetRoundBtn{background:#27ae60;color:#fff;}  
+.desc{color:#555;font-size:16px;text-align:center;margin-top:5px;line-height:1.4;}  
+label{font-size:20px;white-space:nowrap;}  
+.select-box{padding:11px;font-size:21px;width:110px;border:1px solid #ccc;border-radius:6px;background:#fff;}  
+.toast{  
+    position:fixed;  
+    top:40%;  
+    left:50%;  
+    transform:translate(-50%,-50%);  
+    background:#d92121;  
+    color:#fff;  
+    font-size:24px;  
+    font-weight:bold;  
+    padding:18px 28px;  
+    border-radius:12px;  
+    box-shadow:0 10px 30px #00000033;  
+    z-index:9999;  
+    opacity:0;  
+    pointer-events:none;  
+    transition:opacity 0.2s;  
+    text-align:center;  
+}  
+.toast.show{opacity:1;}  
+.toast-round{  
+    position:fixed;  
+    top:40%;  
+    left:50%;  
+    transform:translate(-50%,-50%);  
+    background:#f39c12;  
+    color:#fff;  
+    font-size:22px;  
+    font-weight:bold;  
+    padding:18px 28px;  
+    border-radius:12px;  
+    box-shadow:0 10px 30px #00000033;  
+    z-index:9999;  
+    opacity:0;  
+    pointer-events:none;  
+    transition:opacity 0.2s;  
+    text-align:center;  
+}  
+.toast-round.show{opacity:1;}  
+</style>  
+</head>  
+<body>  
+<div class="box">  
+<h2>白杨河电厂人工采样随机布点</h2>  
+<div class="setting">  
+  <label>点位最小编号：</label>  
+  <input id="pointMin" class="numInput" type="number" min="1" value="1">  
+</div>  
+<div class="setting">  
+  <label>点位最大编号：</label>  
+  <input id="pointMax" class="numInput" type="number" min="1" value="18">  
+</div>  
+<div class="setting">  
+  <label>本次抽取数量：</label>  
+  <select id="drawCount" class="select-box">  
+    <option value="1">1</option><option value="2">2</option><option value="3">3</option>  
+    <option value="4">4</option><option value="5">5</option><option value="6">6</option>  
+    <option value="7">7</option><option value="8">8</option><option value="9">9</option>  
+  </select>  
+  <span style="font-size:16px;white-space:nowrap;">可选1‑9</span>  
+</div>  
+<div class="round-info" id="roundShow">当前轮次：第1轮</div>  
+<div class="countdown" id="countShow">✅可直接抽取</div>  
+<div class="time-info" id="timeShow"></div>  
+<div class="result" id="show">—</div>  
+<div class="wrap-row used">  
+  <div class="txt-row" id="usedShow">本轮已抽取点位：无</div>  
+  <button class="toggle-btn" id="usedToggle">展开</button>  
+</div>  
+<div class="wrap-row all">  
+  <div class="txt-row" id="allShow">全部点位：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16、17、18</div>  
+  <button class="toggle-btn" id="allToggle">展开</button>  
+</div>  
+<div class="car-input-wrap">  
+    <input id="carNoInput" class="numInput" type="text" placeholder="👉请输入车辆编号">  
+</div>  
+<div class="btn-row">  
+  <button class="btn" id="exportBtn">导出记录</button>  
+  <button class="btn" id="drawBtn">抽取采样点</button>  
+</div>  
+<div class="btn-row">  
+  <button class="btn" id="resetAllBtn">全部清空</button>  
+  <button class="btn" id="resetRoundBtn">重置本轮</button>  
+</div>  
+<p class="desc">采样前填写车号；抽取前确认车号；抽取后自动清空车号；点位不够自动下一轮补齐；单次抽取结果内部点位互不重复；结果升序显示；记录本地保存。</p >  
+</div>  
+<div class="toast" id="toast">请先输入车辆编号！</div>  
+<div class="toast-round" id="toastRound"></div>  
+<script>  
+const showDom = document.getElementById('show');  
+const timeDom = document.getElementById('timeShow');  
+const allShowDom = document.getElementById('allShow');  
+const usedShowDom = document.getElementById('usedShow');  
+const roundShowDom = document.getElementById('roundShow');  
+const countShowDom = document.getElementById('countShow');  
+const drawBtn = document.getElementById('drawBtn');  
+const resetRoundBtn = document.getElementById('resetRoundBtn');  
+const resetAllBtn = document.getElementById('resetAllBtn');  
+const exportBtn = document.getElementById('exportBtn');  
+const pointMin = document.getElementById('pointMin');  
+const pointMax = document.getElementById('pointMax');  
+const drawCount = document.getElementById('drawCount');  
+const carNoInput = document.getElementById('carNoInput');  
+const toast = document.getElementById('toast');  
+const toastRound = document.getElementById('toastRound');  
+const usedToggle = document.getElementById('usedToggle');  
+const allToggle = document.getElementById('allToggle');  
+let usedList = [];  
+let lastDrawPoints = [];  
+let totalPool = [];  
+let roundNum = 1;  
+let recordList = [];  
+function showToast(msg){  
+    toast.textContent = msg;  
+    toast.classList.add('show');  
+    setTimeout(()=>{toast.classList.remove('show');},1800);  
+}  
+function showRoundToast(msg){  
+    toastRound.textContent = msg;  
+    toastRound.classList.add('show');  
+    setTimeout(()=>{toastRound.classList.remove('show');},2200);  
+}  
+function shuffle(arr){  
+    let a=[...arr];  
+    for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}  
+    return a;  
+}  
+function saveSettings(){  
+  localStorage.setItem("sample_settings",JSON.stringify({min:pointMin.value,max:pointMax.value,cnt:drawCount.value}));  
+}  
+function loadSettings(){  
+  const s=localStorage.getItem("sample_settings");  
+  if(s){const d=JSON.parse(s);pointMin.value=d.min;pointMax.value=d.max;drawCount.value=d.cnt;}  
+}  
+function saveToLocal(){  
+  localStorage.setItem("samplingData",JSON.stringify({usedList,lastDrawPoints,roundNum,recordList}));  
+}  
+function loadFromLocal(){  
+  const s=localStorage.getItem("samplingData");  
+  if(s){const d=JSON.parse(s);usedList=d.usedList??[];lastDrawPoints=d.lastDrawPoints??[];roundNum=d.roundNum??1;recordList=d.recordList??[];}  
+}  
+function checkOverflow(el,btn){  
+  if(el.classList.contains('expanded')){btn.textContent="收起";return;}  
+  btn.textContent=el.scrollHeight>el.clientHeight?"展开":"收起";  
+  if(el.scrollHeight>el.clientHeight)btn.classList.remove('hidden');else btn.classList.add('hidden');  
+}  
+usedToggle.onclick=()=>{usedShowDom.classList.toggle('expanded');usedToggle.innerText=usedShowDom.classList.contains('expanded')?'收起':'展开';}  
+allToggle.onclick=()=>{allShowDom.classList.toggle('expanded');allToggle.innerText=allShowDom.classList.contains('expanded')?'收起':'展开';}  
+function refreshAllPoint(min,max){  
+  totalPool=[];for(let i=min;i<=max;i++)totalPool.push(i);  
+  allShowDom.innerText="全部点位："+totalPool.join("、");  
+  allShowDom.classList.remove('expanded');checkOverflow(allShowDom,allToggle);  
+}  
+function refreshUsed(){  
+  if(usedList.length===0)usedShowDom.innerText="本轮已抽取点位：无";  
+  else{const u=[...new Set(usedList)].sort((a,b)=>a-b);usedShowDom.innerText="本轮已抽取点位："+u.join("、");}  
+  usedShowDom.classList.remove('expanded');checkOverflow(usedShowDom,usedToggle);  
+  roundShowDom.innerText="当前轮次：第"+roundNum+"轮";  
+}  
+pointMin.onchange=function(){saveSettings();refreshAllPoint(parseInt(pointMin.value),parseInt(pointMax.value));usedList=[];lastDrawPoints=[];roundNum=1;saveToLocal();refreshUsed();}  
+pointMax.onchange=function(){saveSettings();refreshAllPoint(parseInt(pointMin.value),parseInt(pointMax.value));usedList=[];lastDrawPoints=[];roundNum=1;saveToLocal();refreshUsed();}  
+drawCount.onchange=function(){saveSettings();}  
+drawBtn.onclick=()=>{  
+  const now=new Date();const carNo=carNoInput.value.trim();  
+  if(!carNo){showToast("请先输入车辆编号！");return;}  
+  if(!confirm(`请确认当前车号：【${carNo}】，是否继续采样？`))return;  
+  const min=parseInt(pointMin.value),max=parseInt(pointMax.value),count=parseInt(drawCount.value);  
+  refreshAllPoint(min,max);  
+  if(isNaN(min)||isNaN(max)||isNaN(count)||min>max||count<1||count>9){showToast("参数填写错误");timeDom.innerText="";return;}  
+  let remainPool=totalPool.filter(item=>!usedList.includes(item));let selected=[];  
+  if(remainPool.length<count){  
+    selected=[...remainPool];const needMore=count-remainPool.length;  
+    usedList=[];roundNum+=1;showRoundToast(`⚠️剩余点位不足，已自动进入第${roundNum}轮`);  
+    let newPool=totalPool.filter(x=>!lastDrawPoints.includes(x)).filter(x=>!selected.includes(x));  
+    newPool=shuffle(newPool);selected=selected.concat(newPool.slice(0,needMore));  
+  }else{remainPool=shuffle(remainPool);selected=remainPool.slice(0,count);}  
+  selected.sort((a,b)=>a-b);usedList=usedList.concat(selected);lastDrawPoints=[...selected];  
+  const ts=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,'0')+"-"+String(now.getDate()).padStart(2,'0')+" "+String(now.getHours()).padStart(2,'0')+":"+String(now.getMinutes()).padStart(2,'0')+":"+String(now.getSeconds()).padStart(2,'0');  
+  timeDom.innerText="抽取时间："+ts;showDom.innerText="抽到点位："+selected.join("、");  
+  refreshUsed();recordList.push({carNo,round:roundNum,time:ts,points:selected.join("、")});saveToLocal();carNoInput.value="";  
+}  
+exportBtn.onclick=function(){  
+  let t="=====白杨河电厂人工采样随机布点抽检记录=====\r\n点位范围："+pointMin.value+" ~ "+pointMax.value+"\r\n";  
+  for(let r of recordList)t+=`车号:${r.carNo} | 轮次:${r.round} | 时间:${r.time} | 抽取点位:${r.points}\r\n`;  
+  t+="\r\n全部已抽取点位："+[...new Set(usedList)].sort((a,b)=>a-b).join("、");  
+  const b=new Blob([t],{type:"text/plain;charset=utf-8"}),a=document.createElement('a');  
+  a.href=URL.createObjectURL(b);a.download="白杨河电厂人工采样布点记录.txt";a.click();  
+}  
+resetRoundBtn.onclick=()=>{  
+  if(confirm("⚠️仅重置本轮点位，历史采样记录不会删除，确定吗？")){  
+    showDom.innerText="—";timeDom.innerText="";usedList=[];lastDrawPoints=[];roundNum=1;  
+    countShowDom.innerText="✅可直接抽取";saveToLocal();refreshUsed();  
+  }  
+}  
+resetAllBtn.onclick=()=>{  
+  if(confirm("🔴警告！将清空本轮点位以及全部历史采样记录，删除后无法恢复！确定全部清空吗？")){  
+    showDom.innerText="—";timeDom.innerText="";usedList=[];lastDrawPoints=[];roundNum=1;recordList=[];  
+    countShowDom.innerText="✅可直接抽取";localStorage.removeItem("samplingData");refreshUsed();  
+  }  
+}  
+loadSettings();loadFromLocal();refreshAllPoint(parseInt(pointMin.value),parseInt(pointMax.value));refreshUsed();  
+</script>  
+</body>  
+</html>  
